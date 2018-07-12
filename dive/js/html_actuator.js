@@ -7,6 +7,7 @@ function HTMLActuator() {
   this.currentlyUnlocked= document.querySelector(".currently-unlocked");
 
   this.score = 0;
+  this.uiOn=true;
 
   this.overlayPrimes = [7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47,
     53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127,
@@ -17,28 +18,31 @@ function HTMLActuator() {
 
 HTMLActuator.prototype.actuate = function (grid, metadata) {
   var self = this;
+  if(self.uiOn){
+    window.requestAnimationFrame(function () {
+      self.clearContainer(self.tileContainer);
 
-  window.requestAnimationFrame(function () {
-    self.clearContainer(self.tileContainer);
-
-    grid.cells.forEach(function (column) {
-      column.forEach(function (cell) {
-        if (cell) {
-          self.addTile(cell);
-        }
+      grid.cells.forEach(function (column) {
+        column.forEach(function (cell) {
+          if (cell) {
+            self.addTile(cell);
+          }
+        });
       });
+
+      self.updateScore(metadata.score);
+      self.updateBestScore(metadata.bestScore);
+
+      if (metadata.over) self.message(metadata.over); // You lose.  There's no win condition.
     });
-
-    self.updateScore(metadata.score);
-    self.updateBestScore(metadata.bestScore);
-
-    if (metadata.over) self.message(metadata.over); // You lose.  There's no win condition.
-  });
+  }
 };
 
-HTMLActuator.prototype.restart = function () {
-  this.clearMessage();
-  this.clearCurrentlyUnlocked();
+HTMLActuator.prototype.restart = function (){
+  if(this.uiOn){
+    this.clearMessage();
+    this.clearCurrentlyUnlocked();
+  }
 };
 
 HTMLActuator.prototype.clearContainer = function (container) {
@@ -68,7 +72,7 @@ HTMLActuator.prototype.createTile = function (tile, animate) {
   positionClass = this.positionClass(position);
 
   // We can't use classlist because it somehow glitches when replacing classes
-  var classes = ["tile", "tile-" + gcd(tile.value, 1296000)];
+  var classes = ["tile", "tile-1"];//"tile-" + gcd(tile.value, 1296000)];
   var animatedClasses = [];
 
   classes.push(positionClass);
@@ -136,10 +140,12 @@ HTMLActuator.prototype.createMiniTile = function (value) {
 };
 
 HTMLActuator.prototype.addTile = function (tile) {
-  var element = this.createTile(tile, true);
+  if(this.uiOn){
+    var element = this.createTile(tile, true);
 
-  // Put the tile on the board
-  this.tileContainer.appendChild(element);
+    // Put the tile on the board
+    this.tileContainer.appendChild(element);
+  }
 };
 
 HTMLActuator.prototype.applyClasses = function (element, classes) {
@@ -184,43 +190,49 @@ HTMLActuator.prototype.updateBestScore = function (bestScore) {
 };
 
 HTMLActuator.prototype.announce = function (message) {
-  var announce = document.createElement("p");
-  announce.classList.add("announcement");
-  announce.textContent = message;
-  this.announcer.appendChild(announce);
-  setTimeout(this.removeFirstChild.bind(this,this.announcer),0);
+  if(this.uiOn){
+    var announce = document.createElement("p");
+    announce.classList.add("announcement");
+    announce.textContent = message;
+    this.announcer.appendChild(announce);
+    setTimeout(this.removeFirstChild.bind(this,this.announcer),0);
+  }
 };
 
 HTMLActuator.prototype.message = function (game_over_data) {
-  var type    = false ? "game-won" : "game-over";
-  var message = false ? "You win!" : "Game over!";
+  if(this.uiOn){
+    var type    = false ? "game-won" : "game-over";
+    var message = false ? "You win!" : "Game over!";
 
-  this.clearContainer(this.announcer);
-  this.messageContainer.classList.add(type);
-  this.messageContainer.getElementsByTagName("p")[0].textContent = message;
+    this.clearContainer(this.announcer);
+    this.messageContainer.classList.add(type);
+    this.messageContainer.getElementsByTagName("p")[0].textContent = message;
 
-  if ("tilesSeen" in game_over_data) {
-    var seen = game_over_data.tilesSeen;
-    seen.sort(function (a,b){return a-b});
-    for (var i = seen.length - 2; i >= 0; i--)
-      if (seen[i] == seen[i+1])
-        seen.splice(i,1);
+    if ("tilesSeen" in game_over_data) {
+      var seen = game_over_data.tilesSeen;
+      seen.sort(function (a,b){return a-b});
+      for (var i = seen.length - 2; i >= 0; i--)
+        if (seen[i] == seen[i+1])
+          seen.splice(i,1);
 
-    this.clearContainer(this.currentlyUnlocked);
+      this.clearContainer(this.currentlyUnlocked);
 
-    for (var i = 0; i < seen.length; i++) {
-        var seenElem = this.createMiniTile(seen[i]);
-        if (game_over_data.tileTypes.indexOf(seen[i]) == -1) {
-            seenElem.classList.add('ghost');
-        }
-        this.currentlyUnlocked.appendChild(seenElem);
+      for (var i = 0; i < seen.length; i++) {
+          var seenElem = this.createMiniTile(seen[i]);
+          if (game_over_data.tileTypes.indexOf(seen[i]) == -1) {
+              seenElem.classList.add('ghost');
+          }
+          this.currentlyUnlocked.appendChild(seenElem);
+      }
+      this.currentlyUnlocked.classList.add("all-seeds-seen");
     }
-    this.currentlyUnlocked.classList.add("all-seeds-seen");
   }
 };
 
 HTMLActuator.prototype.clearMessage = function () {
-  this.messageContainer.classList.remove("game-won", "game-over");
+  if(this.uiOn){
+    this.messageContainer.classList.remove("game-won", "game-over");
+  }
 };
 
 HTMLActuator.prototype.updateCurrentlyUnlocked = function (list) {
