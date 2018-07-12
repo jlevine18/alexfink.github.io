@@ -133,7 +133,7 @@ function tick(){
   }
 }
 function findBests(population){
-  var markedPop=population.map(x=>({n:x,s:advancedTest(x,2)}));
+  var markedPop=population.map(x=>({n:x,s:advancedTest(x,10)}));
   markedPop.sort(function(a,b){
     return b.s-a.s;
   });
