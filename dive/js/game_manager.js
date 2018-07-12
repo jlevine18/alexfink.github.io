@@ -29,7 +29,7 @@ GameManager.prototype.setup = function () {
     this.tileTypes = [2];
     this.actuator.updateCurrentlyUnlocked(this.tileTypes);
     this.tilesSeen = [2];
-  } 
+  }
 
   this.score        = 0;
   this.over         = false;
@@ -113,7 +113,7 @@ GameManager.prototype.move = function (direction) {
 
   var ominosityBound;
   if (self.gameMode && 1) {
-    // The idea of this is that a seed is ominous roughly if it exceeds 
+    // The idea of this is that a seed is ominous roughly if it exceeds
     // the 2i-th prime, if there are i seeds so far.
     // But add a little more, to be forgiving.
     ominosityBound = self.tileTypes.length * 2;
@@ -167,7 +167,7 @@ GameManager.prototype.move = function (direction) {
       for (var i = newPrimes.length - 2; i >= 0; i--)
         if (newPrimes[i] == newPrimes[i+1])
           newPrimes.splice(i,1);
-    }        
+    }
     self.tileTypes = self.tileTypes.concat(newPrimes);
   }
 
@@ -190,7 +190,7 @@ GameManager.prototype.move = function (direction) {
       self.actuator.announce(list + verb);
       self.actuator.updateCurrentlyUnlocked(self.tileTypes);
     } // mode 1 only
-        
+
     if ((self.gameMode & 3) == 3) {
       // Eliminate primes now absent.
       var eliminatedIndices = [];
@@ -209,7 +209,7 @@ GameManager.prototype.move = function (direction) {
           }
         });
       });
-          
+
       eliminatedIndices = eliminatedIndices.filter(function (x) {return x != null});
       if (eliminatedIndices.length) {
         var eliminatedPrimes = eliminatedIndices.map(function (x) {return self.tileTypes[x]});
@@ -225,7 +225,7 @@ GameManager.prototype.move = function (direction) {
         self.actuator.announce(list + verb);
         self.actuator.updateCurrentlyUnlocked(self.tileTypes);
       }
-        
+
       for(var i = eliminatedIndices.length - 1; i >= 0; i--)
         self.tileTypes.splice(eliminatedIndices[i],1);
       self.actuator.updateCurrentlyUnlocked(self.tileTypes);
@@ -243,6 +243,7 @@ GameManager.prototype.move = function (direction) {
 
     this.actuate();
   } // if (moved)
+  return moved;
 };
 
 GameManager.prototype.div = function (next, cur) {

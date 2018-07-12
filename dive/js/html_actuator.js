@@ -7,9 +7,9 @@ function HTMLActuator() {
   this.currentlyUnlocked= document.querySelector(".currently-unlocked");
 
   this.score = 0;
-  
-  this.overlayPrimes = [7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 
-    53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 
+
+  this.overlayPrimes = [7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47,
+    53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127,
     131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197,
     199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277,
     281, 283, 293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367];
@@ -48,7 +48,9 @@ HTMLActuator.prototype.clearContainer = function (container) {
 };
 
 HTMLActuator.prototype.removeFirstChild = function (container) {
-  container.removeChild(container.firstChild);
+  if(container.firstChild){
+    container.removeChild(container.firstChild);
+  }
 };
 
 // yes, global function, naughty.  what should I have done?
@@ -126,7 +128,7 @@ HTMLActuator.prototype.createTile = function (tile, animate) {
   return element;
 }
 
-HTMLActuator.prototype.createMiniTile = function (value) { 
+HTMLActuator.prototype.createMiniTile = function (value) {
   var tile = new Tile ({x: null, y: null}, value);
   var tileElement = this.createTile(tile, false);
   tileElement.classList.add("minitile");
@@ -186,7 +188,7 @@ HTMLActuator.prototype.announce = function (message) {
   announce.classList.add("announcement");
   announce.textContent = message;
   this.announcer.appendChild(announce);
-  setTimeout(this.removeFirstChild.bind(this,this.announcer),2500);
+  setTimeout(this.removeFirstChild.bind(this,this.announcer),0);
 };
 
 HTMLActuator.prototype.message = function (game_over_data) {
@@ -196,7 +198,7 @@ HTMLActuator.prototype.message = function (game_over_data) {
   this.clearContainer(this.announcer);
   this.messageContainer.classList.add(type);
   this.messageContainer.getElementsByTagName("p")[0].textContent = message;
-  
+
   if ("tilesSeen" in game_over_data) {
     var seen = game_over_data.tilesSeen;
     seen.sort(function (a,b){return a-b});
