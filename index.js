@@ -20,8 +20,14 @@ function randNet() {
 }
 if (loadIt) {
   fs.readFile('training_state.json','utf8', (err, data) => {
-    if (err)
-      throw err;
+    if (err){
+      console.log(err);
+      for (var i = 0; i < batchSize; i++) {
+        //pop.push(randNet());
+        pop.push(randNet());
+      }
+      go();
+    }
     //console.log(data);
     //console.log(data.split(";")[0]);
     pop = data.split("\n").map(n => Network.fromJSON(JSON.parse(n)));
