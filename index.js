@@ -1,5 +1,5 @@
 var async = require("async");
- 
+
 var fs = require("fs");
 var GameManager = require("./offline/game_manager");
 var game = new GameManager(4);
@@ -151,11 +151,11 @@ function findBests(population,cb) {
   });
   var obj = {dev: "/dev.json", test: "/test.json", prod: "/prod.json"};
   var configs = {};
-   
+
   async.map(population, (value, callback) => {
       callback(null,{
           net: value.net,
-          score: (value.score&&false)?value.score:advancedTest(value.net, 1)
+          score: (value.score&&false)?value.score:advancedTest(value.net, 100)
         });
   }, (err,results) => {
       if (err) console.error(err.message);
@@ -197,12 +197,12 @@ function evolve(times,cb) {
       		pp();
       	}else{
       	fs.writeFileSync('training_state.json', pop.map(network => JSON.stringify(network.net.toJSON())).join("\n"), "utf8");
-      	  
+
       		cb();
       	}
       }
     increment(pp);
-  
+
   //game.actuator.uiOn=true;
   //showBest(pop);
   //console.log("BEST SCORE",testNet(pop[0]));
