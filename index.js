@@ -2,7 +2,8 @@ var async = require("async");
 
 var fs = require("fs");
 var GameManager = require("./offline/game_manager");
-var game = new GameManager(4);
+var gameSize=4;
+var game = new GameManager(gameSize);
 var neataptic = require("neataptic");
 var NNode = neataptic.Node;
 var Neat = neataptic.Neat;
@@ -55,8 +56,8 @@ if (loadIt) {
 }
 function go() {
   console.log("MADE");
-  function currentBoard() {
-    return game.grid.cells.reduce((a, b) => a.concat(b)).map(x => (
+  function currentBoard(game22) {
+    return game22.grid.cells.reduce((a, b) => a.concat(b)).map(x => (
       x
       ? 0.5 / x.value
       : 1));
@@ -84,28 +85,29 @@ function go() {
   var stuck = false;
   //drawGraph(network.graph(1000, 800), '.svg');
   function testNet(network) {
+    var game2 = new GameManager(gameSize);
     //  window.clearInterval(runningLoop);
-    game.restart();
+    game2.restart();
     runningNet = network;
     stuck = false;
     //  runningLoop=window.setInterval(tick,100);
-    while (!(game.over || stuck)) {
-      var choices = runningNet.activate(currentBoard());
+    while (!(game2.over || stuck)) {
+      var choices = runningNet.activate(currentBoard(game2));
       var max = Math.max(...choices);
       var markedChoices = [0, 1, 2, 3].map(x => ({v: x, s: choices[x]}));
       markedChoices.sort(function(a, b) {
         return b.s - a.s;
       });
-      var moved = game.move(markedChoices[0].v);
+      var moved = game2.move(markedChoices[0].v);
       if (!moved) {
         if (strictEnd) {
           stuck = true;
         } else {
-          var moved = game.move(markedChoices[1].v);
+          var moved = game2.move(markedChoices[1].v);
           if (!moved) {
-            var moved = game.move(markedChoices[2].v);
+            var moved = game2.move(markedChoices[2].v);
             if (!moved) {
-              var moved = game.move(markedChoices[3].v);
+              var moved = game2.move(markedChoices[3].v);
               if (!moved) {
                 stuck = true;
               }
@@ -118,7 +120,7 @@ function go() {
     console.log("New Best",game.score);
     bestEver=game.score;
   }*/
-    return game.score;
+    return game2.score;
   }
   function advancedTest(network, times) {
     /*var ave=0;//10000;
