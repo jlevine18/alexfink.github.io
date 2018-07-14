@@ -225,7 +225,7 @@ GameManager.prototype.move = function (direction) {
 
       for(var i = eliminatedIndices.length - 1; i >= 0; i--)
         self.tileTypes.splice(eliminatedIndices[i],1);
-      self.actuator.updateCurrentlyUnlocked(self.tileTypes);
+      //self.actuator.updateCurrentlyUnlocked(self.tileTypes);
     } // mode 3
 
     this.addRandomTile();

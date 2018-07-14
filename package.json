@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/jlevine18/neat-dive#readme",
   "dependencies": {
+    "async": "^2.6.1",
     "neataptic": "^1.4.7"
   }
 }

@@ -3,7 +3,7 @@ var Neat = neataptic.Neat;
 var Network = neataptic.Network;
 var Methods = neataptic.Methods;
 var architect = neataptic.architect;
-var batchSize = 100;
+var batchSize = 50;
 var pop = [];
 for (var i = 0; i < batchSize; i++) {
   pop.push(randNet());
@@ -17,7 +17,7 @@ function randNet() {
 function currentBoard() {
   return game.grid.cells.reduce((a, b) => a.concat(b)).map(x => (
     x
-    ? 1 / x.value
+    ? 0.5 / x.value
     : 1));
 }
 
@@ -140,7 +140,7 @@ function tick() {
 function findBests(population) {
   var markedPop = population.map(x => ({
     n: x,
-    s: advancedTest(x, 100)
+    s: advancedTest(x, 10)
   }));
   markedPop.sort(function(a, b) {
     return b.s - a.s;
@@ -169,11 +169,11 @@ function showBest(population) {
   testNetVisible(best);
 }
 function evolve(times) {
-  game.actuator.uiOn = false;
+  //game.actuator.uiOn = false;
   for (var i = 0; i < times; i++) {
     increment();
   }
-  game.actuator.uiOn = true;
+  //game.actuator.uiOn = true;
   showBest(pop);
   console.log(game.score);
 }

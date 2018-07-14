@@ -1,3 +1,5 @@
+var async = require("async");
+ 
 var fs = require("fs");
 var GameManager = require("./offline/game_manager");
 var game = new GameManager(4);
@@ -7,7 +9,7 @@ var Neat = neataptic.Neat;
 var Network = neataptic.Network;
 var Methods = neataptic.Methods;
 var architect = neataptic.architect;
-var batchSize = 150;
+var batchSize = 121+11;
 var bestEver = 0;
 var pop = [];
 var strictEnd = false;
@@ -15,7 +17,7 @@ var loadedNet = randNet();
 var loadIt = true;
 function randNet() {
   //return neataptic.
-  var network = architect.Random(game.size * game.size, 4, 4);
+  var network = architect.Random(game.size * game.size, 10,4);
   return network;
 }
 if (loadIt) {
@@ -24,20 +26,27 @@ if (loadIt) {
       console.log(err);
       for (var i = 0; i < batchSize; i++) {
         //pop.push(randNet());
-        pop.push(randNet());
+        pop.push({net:randNet(),score:false});
       }
       go();
     }
     //console.log(data);
     //console.log(data.split(";")[0]);
-    pop = data.split("\n").map(n => Network.fromJSON(JSON.parse(n)));
+    pop = data.split("\n").map(n => ({net:Network.fromJSON(JSON.parse(n)),score:false}));
+    if(pop.length<batchSize){
+      pop=pop.slice(0,batchSize);
+    }
+    while(pop.length<batchSize){
+      //pop.push(randNet());
+    pop.push({net:randNet(),score:false});
+    }
     go();
     //batchSize = pop.length;
   });
 } else {
   for (var i = 0; i < batchSize; i++) {
     //pop.push(randNet());
-    pop.push(randNet());
+  pop.push({net:randNet(),score:false});
   }
   go();
 }
@@ -46,7 +55,7 @@ console.log("MADE");
 function currentBoard() {
   return game.grid.cells.reduce((a, b) => a.concat(b)).map(x => (
     x
-    ? 1 / x.value
+    ? 0.5 / x.value
     : 1));
 }
 
@@ -114,7 +123,7 @@ function advancedTest(network, times) {
     ave+=testNet(network)/times;
   //  ave=Math.min(testNet(network),ave);
 }*/
-  var ave1 = 10000;
+  var ave1 = 100000;
   var ave2 = 0;
   var ave0 = 0;
   for (var i = 0; i < times; i++) {
@@ -125,7 +134,7 @@ function advancedTest(network, times) {
     ave0 += res / times;
   }
   var ave = ave1 / 2 + ave2 / 2;
-  var ave = ave1 / 2 + ave / 2;
+  var ave = ave1*0.9 + ave *0.1;
   if (ave > bestEver) {
     console.log("New Best", ave);
     bestEver = ave;
@@ -134,70 +143,66 @@ function advancedTest(network, times) {
   }
   return ave;
 }
-function tick() {
-  if (game.over || stuck) {
-    runningNet = false;
-    window.clearInterval(runningLoop);
-  }
-  if (runningNet) {
-    var choices = runningNet.activate(currentBoard());
-    var max = Math.max(...choices);
-    var markedChoices = [0, 1, 2, 3].map(x => ({v: x, s: choices[x]}));
-    markedChoices.sort(function(a, b) {
-      return b.s - a.s;
-    });
-    var moved = game.move(markedChoices[0].v);
-    if (!moved) {
-      var moved = game.move(markedChoices[1].v);
-      if (!moved) {
-        var moved = game.move(markedChoices[2].v);
-        if (!moved) {
-          var moved = game.move(markedChoices[3].v);
-          if (!moved) {
-            stuck = true;
-          }
-        }
-      }
-    }
-  }
-}
-function findBests(population) {
-  var markedPop = population.map(x => ({
-    n: x,
-    s: advancedTest(x, 100)
-  }));
+
+function findBests(population,cb) {
+  var markedPop = [];
   markedPop.sort(function(a, b) {
-    return b.s - a.s;
+    return b.score - a.score;
   });
-  return markedPop;
+  var obj = {dev: "/dev.json", test: "/test.json", prod: "/prod.json"};
+  var configs = {};
+   
+  async.map(population, (value, callback) => {
+      callback(null,{
+          net: value.net,
+          score: (value.score&&false)?value.score:advancedTest(value.net, 1)
+        });
+  }, (err,results) => {
+      if (err) console.error(err.message);
+      //console.log("best",results)
+      // configs is now a map of JSON data
+      cb(results);
+  });
+  //return markedPop;
 }
-function newGen(population) {
-  var reserved = 50;
-  var nextPop = findBests(population).slice(0, reserved).map(x => x.n);
+function newGen(population,cb) {
+  var reserved = 11;
+  findBests(population,function(res){
+  var nextPop=res.slice(0, reserved);
   for (var i = 0; i < batchSize - reserved; i++) {
-    var a = nextPop[Math.floor(Math.random() * reserved)];
-    var b = nextPop[Math.floor(Math.random() * reserved)];
-    nextPop.push(Network.crossOver(a, b));
-    if (Math.random() < 0.5) {
-      nextPop[nextPop.length - 1].mutate(neataptic.methods.mutation.ALL);
+    var a = nextPop[Math.floor(Math.pow(Math.random(),2) * reserved)].net;
+    var b = nextPop[Math.floor(Math.pow(Math.random(),2) * reserved)].net;
+    nextPop.push({net:Network.crossOver(a, b),score:false});
+    if (Math.random() < 11/121) {
+      nextPop[nextPop.length - 1].net.mutate(neataptic.methods.mutation.ALL);
     }
   }
-  return nextPop;
+  cb(nextPop);
+  });
 }
-function increment() {
-  pop = newGen(pop);
+function increment(cb) {
+  newGen(pop,function(res){pop=res;cb()});
 }
 function showBest(population) {
   var best = findBests(population)[0];
   //game.actuator.clearMessage();
-  console.log("BEST SCORE", best.s, testNet(best.n));
+  console.log("BEST SCORE", best.score, testNet(best.net));
 }
-function evolve(times) {
+function evolve(times,cb) {
   //game.actuator.uiOn=false;
-  for (var i = 0; i < times; i++) {
-    increment();
-  }
-  fs.writeFileSync('training_state.json', pop.map(network => JSON.stringify(network.toJSON())).join("\n"), "utf8");
+  var i=0;
+ function pp(){
+      	if(i<times){
+      		i++;
+      		pp();
+      	}else{
+      	fs.writeFileSync('training_state.json', pop.map(network => JSON.stringify(network.net.toJSON())).join("\n"), "utf8");
+      	  
+      		cb();
+      	}
+      }
+    increment(pp);
+  
   //game.actuator.uiOn=true;
   //showBest(pop);
   //console.log("BEST SCORE",testNet(pop[0]));
@@ -205,10 +210,11 @@ function evolve(times) {
 }
 //fs.writeFileSync('test.json', "hi","utf8");
 var ep = 0;
-while (true) {
+function loop() {
   console.log("EPOC:" + ep++);
-  evolve(1);
+  evolve(1,loop);
 }
+loop();
 /* window.onready=function(){
 evolve(100);
 } */
