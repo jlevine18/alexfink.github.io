@@ -2,7 +2,7 @@ var async = require("async");
 
 var fs = require("fs");
 var GameManager = require("./offline/game_manager");
-var gameSize=4;
+var gameSize = 4;
 var game = new GameManager(gameSize);
 var neataptic = require("neataptic");
 var NNode = neataptic.Node;
@@ -161,12 +161,16 @@ function go() {
     };
     var configs = {};
 
-    cb(population.map(value => ({
-      net: value.net,
-      score: (value.score && false)
-        ? value.score
-        : advancedTest(value.net, 100)
-    })));
+    async.map(population, function(value, cbb) {
+      cbb(null, {
+        net: value.net,
+        score: (value.score && false)
+          ? value.score
+          : advancedTest(value.net, 100)
+      });
+    }, function(err, res) {
+      cb(res);
+    });
     //return markedPop;
   }
   function newGen(population, cb) {
